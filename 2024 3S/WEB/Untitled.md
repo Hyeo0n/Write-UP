@@ -4,7 +4,7 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <h1>2024 3S CTF "Untitled" (WEB) Write-UP</h1>
+    <h1>2024 3S CTF "Untitled"  Write-UP</h1>
 </body>
 <br>
 <br>
