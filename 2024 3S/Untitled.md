@@ -24,7 +24,7 @@
 > flag.php
 <br>
 
- flag.php 파일을 살펴보니, 플래그 값을 정의하고 있는 것을 확인할 수 있었다. 실제 flag 값은 "**REDACTED**"로 감추어져 있는 것을 확인할 수 있었다.  
+ flag.php 파일을 살펴보니, 플래그 값을 정의하고 있는 것을 확인할 수 있었다. 실제 flag 값은 **REDACTED**로 감추어져 있는 것을 확인할 수 있었다.  
 <br></br><br></br>
 
  ![image](https://github.com/user-attachments/assets/812a7d59-93de-42b0-8ed5-f5ce2ecc9b21)
@@ -58,5 +58,5 @@
  ![image](https://github.com/user-attachments/assets/2db6bf0d-31b4-4e2d-aba4-1437c50b72cf)
   <br>
  </br>
- 최종적으로 해당 `3S{re_re_re_r3_Re_re_RE_re_re_GEx}`
+ 최종적으로 해당 "**3S{re_re_re_r3_Re_re_RE_re_re_GEx}**"
 가 flag 값인 것을 확인할 수 있었다!
