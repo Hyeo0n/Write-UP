@@ -43,7 +43,7 @@
 
  </br>
  
- ![image](https://github.com/user-attachments/assets/f57444c1-3b1e-4bc3-8092-8ea9d1959322)
+![image](https://github.com/user-attachments/assets/1140d849-9f85-47ba-a920-998714f450ad)
 
  <br>
 
@@ -53,8 +53,8 @@ Mainactivity 부분을 살펴보니, 아까 녹스에서 앱을 실행시켰을 
  <br>
 
  </br>
- 
-![image](https://github.com/user-attachments/assets/1140d849-9f85-47ba-a920-998714f450ad)
+
+ ![image](https://github.com/user-attachments/assets/f57444c1-3b1e-4bc3-8092-8ea9d1959322)
 
  <br>
 
