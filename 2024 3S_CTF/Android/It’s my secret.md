@@ -60,4 +60,7 @@ Mainactivity 부분을 살펴보니, 아까 녹스에서 앱을 실행시켰을 
  <br>
 
  </br>
- 바로 secretactivity를 살펴보니, "**SF{It's_your_first_step_toward_Android_hacking}**" 이라고 flag 같은 값이 나온 것을 확인할 수 있었다. 
+ 바로 secretactivity를 살펴보니, 
+ 
+ ``SF{It's_your_first_step_toward_Android_hacking}`` 
+ 이라고 flag 같은 값이 나온 것을 확인할 수 있었다. 
