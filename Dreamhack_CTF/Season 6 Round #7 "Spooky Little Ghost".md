@@ -30,6 +30,222 @@
 
  </br>
 
+## Cipher.py
+
+```
+from utils import *
+
+class GHOST:
+    sbox = (
+        (0xC, 0x4, 0x6, 0x2, 0xA, 0x5, 0xB, 0x9, 0xE, 0x8, 0xD, 0x7, 0x0, 0x3, 0xF, 0x1),
+        (0x6, 0x8, 0x2, 0x3, 0x9, 0xA, 0x5, 0xC, 0x1, 0xE, 0x4, 0x7, 0xB, 0xD, 0x0, 0xF),
+        (0xB, 0x3, 0x5, 0x8, 0x2, 0xF, 0xA, 0xD, 0xE, 0x1, 0x7, 0x4, 0xC, 0x9, 0x6, 0x0),
+        (0xC, 0x8, 0x2, 0x1, 0xD, 0x4, 0xF, 0x6, 0x7, 0x0, 0xA, 0x5, 0x3, 0xE, 0x9, 0xB),
+        (0x7, 0xF, 0x5, 0xA, 0x8, 0x1, 0x6, 0xD, 0x0, 0x9, 0x3, 0xE, 0xB, 0x4, 0x2, 0xC),
+        (0x5, 0xD, 0xF, 0x6, 0x9, 0x2, 0xC, 0xA, 0xB, 0x7, 0x8, 0x1, 0x4, 0x3, 0xE, 0x0),
+        (0x8, 0xE, 0x2, 0x5, 0x6, 0x9, 0x1, 0xC, 0xF, 0x4, 0xB, 0x0, 0xD, 0xA, 0x3, 0x7),
+        (0x1, 0x7, 0xE, 0xD, 0x0, 0x5, 0x8, 0x3, 0x4, 0xF, 0xA, 0x6, 0x9, 0xC, 0xB, 0x2)
+    )
+
+    def __init__(self, key: bytes) -> None:
+        self._block_size = 8
+        self._round_keys = self._expand_key(key)
+        self._state = []
+
+    def _expand_key(self, key: bytes) -> list[list[int]]:
+        assert len(key) == 8
+        key_bits = bytes_to_bits(key)
+        round_keys: list[list[int]] = []
+        for i in range(0, 64, 32):
+            round_keys.append(key_bits[i:i+32])
+        return round_keys
+
+    def _substitution(self, bit32: list[int]) -> list[int]:
+        res: list[int] = []
+        for i,j in enumerate(range(0,32,4)):
+            res += int_to_bits(self.sbox[7-i][bits_to_int(bit32[j:j+4])], 4)
+        return res
+
+    def _round_function(self, round_n: int, is_enc: bool) -> None:
+        round_key_idx = round_n%2
+
+        state_hi = self._state[:32]
+        state_lo = self._state[32:]
+
+        state_lo = add_mod_2_32(state_lo, self._round_keys[round_key_idx])
+        state_lo = self._substitution(state_lo)
+        state_lo = rol11(state_lo)
+        state_lo = xor_lst(state_lo, state_hi)
+
+        if (is_enc and round_n == 31) or (not is_enc and round_n == 0):
+            self._state[:32] = state_lo
+        else:
+            self._state[:32] = self._state[32:]
+            self._state[32:] = state_lo  
+
+    def _encrypt(self, plaintext: bytes) -> bytes:
+        self._state = bytes_to_bits(plaintext)
+        for i in range(32):
+            self._round_function(i, is_enc=True)
+        return bits_to_bytes(self._state)
+
+    def _decrypt(self, ciphertext: bytes) -> bytes:
+        self._state = bytes_to_bits(ciphertext)
+        for i in range(31, -1, -1):
+            self._round_function(i, is_enc=False)
+        return bits_to_bytes(self._state)
+
+    def encrypt(self, plaintext: bytes) -> bytes:
+        assert len(plaintext)%self._block_size == 0
+        ciphertext  = b''
+        for i in range(0, len(plaintext), self._block_size):
+            ciphertext += self._encrypt(plaintext[i:i + self._block_size])
+        return ciphertext
+
+    def decrypt(self, ciphertext: bytes) -> bytes:
+        assert len(ciphertext)%self._block_size == 0
+        plaintext  = b''
+        for i in range(0, len(ciphertext), self._block_size):
+            plaintext += self._decrypt(ciphertext[i:i + self._block_size])
+        return plaintext
+
+def test():
+    import os
+    trial = 0x1000
+    for _ in range(trial):
+        key = os.urandom(8)
+        g = GHOST(key)
+        plain = os.urandom(8)
+        cipher = g.encrypt(plain)
+        assert plain == g.decrypt(cipher)
+
+if __name__ == '__main__':
+    test()
+
+```
+
+GHOST 클래스가 정의되어져 있는데, sbox는 8개의 테이블이 정의되어 있는데, 이는 치환 과정에서 비트들을 치환하는 역할을 하는 것으로 보이는데, 각 s-box는 16개의 값으로 이루어져 있다. 
+
+<br>
+
+ </br>
+
+` __init__` 생성자 부분을 살펴보니, key는 8바이트 길이의 키를 받아 초기화하는 것으로 보이고, -block_size는 고정된 블록 크기로 8바이트를 사용하고, _round_keys는 _expand_key() 메서드를 통해 확정된 라운드 키를 저장하는 것으로 보인다. _state는 암호화/복호화 중의 상태 비트 배열을 저장할 리스트이다.
+
+ <br>
+
+ </br>
+
+ _expand_key(self, key: bytes) -> list[list[int]] 부분을 보니, key는 8바이트의 키를 받아 2개의 32비트 라운드 키로 확장하는 것으로 보이고, bytes_to_bits()는 바이트 배열을 비트 배열로 변환하는 것으로 보인다. 각각 32비트씩 나누어진 키를 사용하여, 두 개의 라운드 키가 생성되는 것으로 보인다. 
+
+ <br>
+
+ </br>
+
+ _substitution(self, bit32: list[int]) -> list[int] 부분을 보니, 32비트의 입력을 받아 각 4비트 블록에 대해 S-box 치환을 수행하고, 입력 비트 블록을 S-box를 통해 변환한 후, 결과를 다시 4비트로 변환하는 것으로 보인다. 
+
+ <br>
+
+ </br>
+
+ _round_function(self, round_n: int, is_enc: bool) 부분을 보니, 현재 라운드 번호에 맞는 라운드 키를 선택하고, 32비트 상위 블록(state_hi)과 하위 블록(state_lo)으로 상태를 나누고, 하위 블록에 라운드 키를 더하는 것으로 보인다. 그리고, S-box 치환 및 비트 회전을 수행하시는 것으로 보인다. 그 후, XOR 연산을 통해 상위 블록과 하위 블록을 결합하고, 마지막 라운드에서는 상위 블록과 하위 블록을 뒤바꾸지 않고 암호화, 복호화를 하는 것으로 보인다.
+
+ <br>
+
+ </br>
+
+ _encrypt() 과 _decrypt() 메서드는 각 블록에 대해 32라운드 동안 암호화 또는 복호화를 수행하고, encrypt()와 decrypt()는 데이터를 블록 단위로 나누어 암호화/복호화를 수행하는 것으로 보인다. 그 후, 전체 데이터는 _block_size 에 맞게 나누어 처리시키는 것으로 보인다.
+
+
+<br>
+
+ </br>
+
+ <br>
+
+ </br>
+
+ ## utils.py
+
+```
+def xor_lst(a: list[int], b: list[int]) -> list[int]:
+    return [x^y for x,y in zip(a,b)]
+
+def xor_bytes(a: bytes, b: bytes) -> bytes:
+    return bytes([x^y for x,y in zip(a,b)])
+
+def int_to_bits(d: int, bits_len:int = 8) -> list[int]:
+    return [int(x) for x in bin(d)[2:].zfill(bits_len)]
+
+def bits_to_int(bits: list[int]) -> int:
+    return int(''.join([str(x) for x in bits]),2)
+
+def bytes_to_bits(m: bytes) -> list[int]:
+    bits = []
+    for b in m:
+        bits += [int(x) for x in bin(b)[2:].zfill(8)]
+    return bits
+
+def bits_to_bytes(bits: list[int]) -> bytes:
+    return bits_to_int(bits).to_bytes(len(bits)//8, 'big')
+
+def add_mod_2_32(bit32: list[int], key32: list[int]) -> list[int]:
+    return int_to_bits((bits_to_int(bit32) + bits_to_int(key32)) % (2**32), 32)
+
+def rol11(bit32: list[int]) -> list[int]:
+    return bit32[11:]+bit32[:11]
+```
+xor_lst(a: list[int], b: list[int]) -> list[int] 를 보니, 두 개의 비트 리스트를 받아 각 요소를 XOR 연산으로 결합한 결과를 반환하는 것으로 보인다. 
+
+<br>
+
+ </br>
+ 
+xor_bytes(a: bytes, b: bytes) -> bytes 부분을 보니, 두 바이트 배열의 각 바이트를 XOR 연산으로 결합한 결과를 반환하는 것으로 보인다. 
+
+<br>
+
+ </br>
+
+ int_to_bits(d: int, bits_len: int = 8) -> list[int] 부분을 보니, 정수를 이진수 비트 리스트로 변환하는 것으로 보인다. 정수를 2진수로 변환한 후, 지정된 비트 길이만큼 리스트로 반환하는 것으로 보인다. 
+
+ <br>
+
+ </br>
+
+ bits_to_int(bits: list[int]) -> int 부분을 보니, 비트 리스트를 정수로 변환하고, 비트 리스트를 이진수 문자열로 바꾼 후, 이를 정수로 변환하는 것으로 보인다.
+
+  <br>
+
+ </br>
+
+ bytes_to_bits(m: bytes) -> list[int] 부분을 보니, 바이트 배열을 비트 리스트로 변환하는 것으로 보인다. 바이트 배열의 각 바이트를 8비트씩 분리하여 비트 리스트로 만들어 반환하는 것 같다.
+
+ <br>
+
+ </br>
+
+ bits_to_bytes(bits: list[int]) -> bytes 부분을 보니, 비트 리스트를 바이트 배열로 변환하는 것으로 보인다. 비트 리스트를 정수로 변환한 후, 이를 바이트로 변환하여 반환하는 것 같다.
+
+  <br>
+
+ </br>
+ 
+add_mod_2_32(bit32: list[int], key32: list[int]) -> list[int] 부분을 보니, 두 32비트 비트 리스트를 더한 후, 2^32로 나눈 나머지를 계산하여 반환하는 것 같다. 
+
+ <br>
+
+ </br>
+ 
+rol11(bit32: list[int]) -> list[int] 부분을 보니, 32비트 비트 리스트를 11비트 왼쪽으로 회전시키는 것으로 보인다. 이 파일 함수들은 주로 비트 연산과 데이터 변환을 하는 것 같은데, 이 함수들은 cipher.py에서 암호화와 복호화 과정의 비트 처리, 키 확정, 라운드 함수에서 많이 사용되는 것으로 보인다..
+
+ <br>
+
+ </br>
+  <br>
+
+ </br>
+
  ## prob.py
  
 ```
