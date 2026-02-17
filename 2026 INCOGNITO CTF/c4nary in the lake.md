@@ -152,6 +152,7 @@ p.sendafter(b"bytes):", payload)
 p.interactive()
 ```
 
-<img width="1270" height="226" alt="image" src="https://github.com/user-attachments/assets/26e003a8-05ae-4518-8204-0d498541395c" />
+<img width="1540" height="266" alt="image" src="https://github.com/user-attachments/assets/2ec71e8f-be2b-4aaa-9352-2ca434669983" />
+
 
 flag 값을 얻었다
